@@ -23,7 +23,7 @@ services:
 
   api:
     build: .
-    command: "bash -c 'sleep 15 && flask db upgrade && flask run --host=0.0.0.0 --port=8080 --debug'"
+    command: "bash -c 'sleep 15 && export FLASK_APP=src/app.py && flask db upgrade && flask run --host=0.0.0.0 --port=8080 --debug'"
     container_name: api
     ports:
       - "8080:8080"
