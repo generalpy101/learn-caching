@@ -3,6 +3,7 @@ from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 
 from .models import Notes
 
+
 class NotesSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = Notes
