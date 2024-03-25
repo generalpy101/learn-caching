@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 
 from .app import db, redis_connection
 from .models import Notes
-from .schema import NotesSchema
+from .schema import NotesSchema, RedisNotesSchema
 
 notes_bp = Blueprint("notes", __name__)
 
@@ -18,12 +18,15 @@ def get_notes():
 @notes_bp.route("/<int:note_id>", methods=["GET"])
 def get_note_by_id(note_id):
     schema = NotesSchema()
+    redis_schema = RedisNotesSchema()
 
     # First check if the note is in Redis
     note = redis_connection.get(f"note:{note_id}")
 
     if note is not None and note != b'{}':
-        return jsonify(schema.loads(note))
+        note = redis_schema.loads(note)
+
+        return jsonify(note)
 
     # If not, get it from the DB and cache it
     note = Notes.query.filter(Notes.id == note_id).first()
@@ -57,7 +60,11 @@ def update_note(note_id):
     if not note:
         return jsonify({"message": "Note not found"}), 404
 
-    note = schema.load(request.json, instance=note)
+    note_data = schema.load(request.json)
+    
+    # Upsert data
+    for key, value in note_data.items():
+        setattr(note, key, value)
 
     db.session.commit()
 
